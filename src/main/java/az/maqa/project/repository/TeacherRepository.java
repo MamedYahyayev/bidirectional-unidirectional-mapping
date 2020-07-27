@@ -1,13 +1,14 @@
 package az.maqa.project.repository;
 
-import java.util.List;
-
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 import az.maqa.project.entity.Teacher;
 
-public interface TeacherRepository extends CrudRepository<Teacher, Long> {
+public interface TeacherRepository extends PagingAndSortingRepository<Teacher, Long> {
 
-	List<Teacher> findAllByActive(Integer active);
+	Page<Teacher> findAllByActive(Pageable pageable,Integer active);
+	
 	
 }

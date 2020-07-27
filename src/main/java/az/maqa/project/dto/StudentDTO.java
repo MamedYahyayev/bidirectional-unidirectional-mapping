@@ -1,6 +1,5 @@
 package az.maqa.project.dto;
 
-import az.maqa.project.entity.Teacher;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

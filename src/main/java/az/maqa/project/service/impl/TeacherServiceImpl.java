@@ -1,7 +1,5 @@
 package az.maqa.project.service.impl;
 
-import static java.util.stream.Collectors.toList;
-
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,6 +7,9 @@ import java.util.List;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeToken;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import az.maqa.project.dto.StudentDTO;
@@ -29,12 +30,19 @@ public class TeacherServiceImpl implements TeacherService {
 	private StudentRepository studentRepository;
 
 	@Override
-	public List<TeacherDTO> getTeachers() {
+	public List<TeacherDTO> getTeachers(int page, int size) {
 		List<TeacherDTO> teacherDtoList = new ArrayList<>();
 
 		ModelMapper mapper = new ModelMapper();
 
-		List<Teacher> teachers = teacherRepository.findAllByActive(1);
+		if (page > 0)
+			page = page - 1;
+
+		Pageable pageable = PageRequest.of(page, size);
+
+		Page<Teacher> teachersPage = teacherRepository.findAllByActive(pageable, 1);
+
+		List<Teacher> teachers = teachersPage.getContent();
 
 		Type listType = new TypeToken<List<TeacherDTO>>() {
 		}.getType();
@@ -44,27 +52,26 @@ public class TeacherServiceImpl implements TeacherService {
 		return teacherDtoList;
 	}
 
-	private TeacherDTO toDto(Teacher teacher) {
-		TeacherDTO teacherDto = new TeacherDTO();
-		teacherDto.setId(teacher.getId());
-		teacherDto.setName(teacher.getName());
-		teacherDto.setSurname(teacher.getSurname());
-		teacherDto.setAge(teacher.getAge());
-		teacherDto.setTeachLesson(teacher.getTeachLesson());
-		teacherDto.setDegree(teacher.getDegree());
-		return teacherDto;
-	}
-
 	@Override
-	public TeacherDTO getTeacherById(Long id) {
+	public TeacherDTO getTeacherById(Long id, int page, int limit) {
 		TeacherDTO returnValue = new TeacherDTO();
-		
-		ModelMapper modelMapper  = new ModelMapper();
-		
+		ModelMapper modelMapper = new ModelMapper();
+
 		Teacher teacher = teacherRepository.findById(id).get();
-		
+
+		if (page > 0)
+			page = page - 1;
+
+		Pageable pageable = PageRequest.of(page, limit);
+
+		Page<Student> studentsPage = studentRepository.findAllByTeacher(teacher, pageable);
+
+		List<Student> students = studentsPage.getContent();
+
+		teacher.setStudents(students);
+
 		returnValue = modelMapper.map(teacher, TeacherDTO.class);
-		
+
 		return returnValue;
 	}
 
@@ -75,6 +82,7 @@ public class TeacherServiceImpl implements TeacherService {
 		ModelMapper mapper = new ModelMapper();
 
 		for (int i = 0; i < teacherDTO.getStudents().size(); i++) {
+
 			StudentDTO studentDTO = teacherDTO.getStudents().get(i);
 
 			studentDTO.setTeacher(teacherDTO);
